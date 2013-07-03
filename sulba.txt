@@ -1,0 +1,115 @@
+Name = SulbaSutras
+Number of seeds = 400
+Lines per seed = 60
+Score to win = 10000
+Runs per query = 10
+Query delay = 3
+Kill = 100
+Mutate best = 50
+Point mutations = 0.10
+New = 50
+Lines per out = 10
+Score per out = 1
+
+Header start
+from random import uniform
+from math import sqrt
+constA = constB = constC = 5
+
+while pow(constB,2) < 4*constA*constC:
+	constA = uniform(-400,400)
+	constB = uniform(-400,400)
+	constC = uniform(-400,400)
+
+score = 0.0
+a = 1.0
+b = 1.0
+c = 1.0
+d = 1.0
+e = 1.0
+f = 1.0
+g = 1.0
+h = 1.0
+i = 1.0
+j = 1.0
+k = 1.0
+
+Header end
+
+Footer start
+
+difference1 = pow((constA*pow(ans1,2) + constB*ans1 + constC),2)
+difference2 = pow((constB*pow(ans2,2) + constB*ans2 + constC),2)
+if gen % 300 < 100:
+
+score += 10000 - (index/399)*97*difference1 - 3*difference1 - ((399-index)/(399))*97*difference2 - 3*difference2
+outFile.write(str(score))
+outFile.close()
+Footer end
+
+Words1 = a
+Words1 = b
+Words1 = c
+Words1 = d
+Words1 = e
+Words1 = f
+Words1 = g
+Words1 = h
+Words1 = i
+Words1 = j
+Words1 = k
+Words1 = ans1
+Words1 = ans2
+Words2 = constA
+Words2 = constB
+Words2 = constC
+Words2 = a
+Words2 = b
+Words2 = c
+Words2 = d
+Words2 = e
+Words2 = f
+Words2 = g
+Words2 = h
+Words2 = i
+Words2 = j
+Words2 = k
+Words3 = constA
+Words3 = constB
+Words3 = constC
+Words3 = b
+Words3 = c
+Words3 = d
+Words3 = e
+Words3 = f
+Words3 = g
+Words3 = h
+Words3 = i
+Words3 = j
+Words3 = k
+Words4 = -1
+Words4 = -1
+Words4 = 1
+Words4 = 2
+Words4 = 3
+Words4 = 4
+Words4 = 5
+Words4 = 6
+Words4 = 7
+Words4 = 8
+Words4 = 9
+Words4 = 10
+Words5 = 
+Words5 = 
+Code = @5@1 = @2 + @3
+Code = @5@1 = @2 - @3
+Code = @5@1 = @2 * @3
+Code = @5@1 = @2 / @3
+Code = @5@1 = sqrt(@1)	
+Code = @5@1 = pow(@2,min(@3,10))
+Code = @5@1 = pow(@2,min(@4,10))
+Code = @5@1 = @2 + @4
+Code = @5@1 = @2 - @4
+Code = @5@1 = @2 * @4
+Code = @5@1 = @2 / @4
+Code = @5@1 = @4

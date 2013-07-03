@@ -1,0 +1,91 @@
+Name = ScarecrowsBrain
+Score to win = 10000
+Reward comments = False
+Number of seeds = 300
+Lines per seed = 25
+Runs per query = 10
+Query delay = 10
+Kill = 150
+New = 15
+Mutate best = 5
+Point mutations = 0.25
+Lines per out = 10
+Score per out = 1
+
+Header start
+from random import uniform
+from math import sqrt
+constA = uniform(5,10000)
+constB = uniform(5,10000)
+constC = sqrt(pow(constA,2) + pow(constB,2))
+
+score = 0.0
+a = 1.0
+b = 1.0
+c = 1.0
+d = 1.0
+e = 1.0
+f = 1.0
+g = 1.0
+h = 1.0
+i = 1.0
+j = 1.0
+k = 1.0
+
+Header end
+
+Footer start
+
+difference1 = pow((ans1 - constC),2)
+if ans1 < 0:
+	score -= 100
+
+score += 10000 - 10*difference1
+outFile.write(str(score))
+outFile.close()
+Footer end
+
+Words1 = ans1
+Words1 = a
+Words1 = b
+Words1 = c
+Words1 = d
+Words1 = e
+Words1 = f
+Words2 = constA
+Words2 = constB
+Words2 = a
+Words2 = b
+Words2 = c
+Words2 = d
+Words2 = e
+Words2 = f
+Words3 = constA
+Words3 = constB
+Words3 = a
+Words3 = b
+Words3 = c
+Words3 = d
+Words3 = e
+Words3 = f
+Words4 = -1
+Words4 = -1
+Words4 = 1
+Words4 = 2
+Words4 = 3
+Words4 = 5
+Words4 = 7
+Words4 = 9
+Words5 = 
+Code = @5@1 = @2 + @3
+Code = @5@1 = @2 - @3
+Code = @5@1 = @2 * @3
+Code = @5@1 = @2 / @3
+Code = @5@1 = sqrt(@1)	
+Code = @5@1 = pow(@2,min(@3,100))
+Code = @5@1 = @2 + @4
+Code = @5@1 = @2 - @4
+Code = @5@1 = @2 * @4
+Code = @5@1 = @2 / @4
+Code = @5@1 = @4
+Code = @5@1 = pow(@2,min(@4,100))

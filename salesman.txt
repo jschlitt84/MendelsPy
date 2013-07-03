@@ -1,0 +1,91 @@
+Name = DeathOfAProblemSet
+Number of seeds = 500
+Lines per seed = 40
+Score to win = 10000
+Runs per query = 10
+Query delay = 10
+Kill = 100
+Mutate best = 200
+Point mutations = 0.20
+New = 180
+Lines per out = 10
+Score per out = 1
+
+Header start
+import random
+import math
+
+stops = [[0,0],[0,50],[0,100],[0,150],[0,200],[0,250],[50,250],[100,250],[150,250],[200,250],[250,250],[250,200],[250,150],[250,100],[250,50],[250,0],[200,0],[150,0],[100,0],[50,0],[0,0]]
+order = [0]
+
+score = 0.0
+
+Header end
+
+Footer start
+
+pos=0
+limit = len(order)
+while pos < limit:
+	if order[pos] == -1:
+		del order[pos]
+		limit -= 1
+	pos += 1
+
+pos = 0
+while pos<len(stops):
+	if pos not in order:
+		score -= 5000
+	pos += 1
+
+pos=0
+while pos < limit-1:
+	if order[pos] in order[pos+1:]:
+		pos2 = pos + 1
+		while pos2 < limit:
+			if order[pos2] == order[pos]:
+				del order[pos2]
+				limit -= 1
+			else:
+				pos2 += 1
+	pos += 1
+
+pos=0
+distance =  0
+while pos < limit-1:
+	distance += math.sqrt(pow(stops[order[pos]][0]-stops[order[pos+1]][0],2) + pow(stops[order[pos]][1]-stops[order[pos+1]][1],2))
+	pos += 1
+score += 20000 - 10*distance
+
+if order[-1] != len(order) -1:
+	score -= 5000
+
+outFile.write(str(score))
+outFile.close()
+Footer end
+
+Words1 = 0
+Words1 = 1
+Words1 = 2
+Words1 = 3
+Words1 = 4
+Words1 = 5
+Words1 = 6
+Words1 = 7
+Words1 = 8
+Words1 = 9
+Words1 = 10
+Words1 = 11
+Words1 = 12
+Words1 = 13
+Words1 = 14
+Words1 = 15
+Words1 = 16
+Words1 = 17
+words1 = 18
+Words1 = 19
+Words1 = 20
+Words1 = -1
+Words1 = -1
+Words1 = -1
+Code = order.append(@1)
