@@ -24,7 +24,7 @@ Header end
 
 Footer start
 
-order =  list(OrderedDict.(order))
+order =  list(OrderedDict.fromkeys(order))
 if -1 in order:
 	del order.index(-1)
 
