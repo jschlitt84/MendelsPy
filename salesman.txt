@@ -26,7 +26,7 @@ Footer start
 
 order =  list(OrderedDict.fromkeys(order))
 if -1 in order:
-	del order.index(-1)
+	del order[order.index(-1)]
 
 for stop in stops:
 	if stop not in order:
