@@ -12,8 +12,8 @@ Lines per out = 10
 Score per out = 1
 
 Header start
-import random
-import math
+from math import sqrt, pow
+from collections import OrderedDict
 
 stops = [[0,0],[0,50],[0,100],[0,150],[0,200],[0,250],[50,250],[100,250],[150,250],[200,250],[250,250],[250,200],[250,150],[250,100],[250,50],[250,0],[200,0],[150,0],[100,0],[50,0],[0,0]]
 order = [0]
@@ -24,37 +24,20 @@ Header end
 
 Footer start
 
-pos=0
-limit = len(order)
-while pos < limit:
-	if order[pos] == -1:
-		del order[pos]
-		limit -= 1
-	pos += 1
+order =  list(OrderedDict.(order))
+if -1 in order:
+	del order.index(-1)
 
-pos = 0
-while pos<len(stops):
-	if pos not in order:
+for stop in stops:
+	if stop not in order:
 		score -= 5000
-	pos += 1
 
-pos=0
-while pos < limit-1:
-	if order[pos] in order[pos+1:]:
-		pos2 = pos + 1
-		while pos2 < limit:
-			if order[pos2] == order[pos]:
-				del order[pos2]
-				limit -= 1
-			else:
-				pos2 += 1
-	pos += 1
 
-pos=0
 distance =  0
-while pos < limit-1:
-	distance += math.sqrt(pow(stops[order[pos]][0]-stops[order[pos+1]][0],2) + pow(stops[order[pos]][1]-stops[order[pos+1]][1],2))
+for pos in range(len(order)-1):
+	distance += sqrt(pow(stops[order[pos]][0]-stops[order[pos+1]][0],2) + pow(stops[order[pos]][1]-stops[order[pos+1]][1],2))
 	pos += 1
+
 score += 20000 - 10*distance
 
 if order[-1] != len(order) -1:
