@@ -3,6 +3,10 @@ import sys, os
 import subprocess
 import time
 import select
+from math import sqrt
+
+def adjustError(diversity):
+    return ((1-diversity)*4+1)
 
 def fileName(name, number):
     return name + '/' + name + str(number) + '.py'
@@ -17,7 +21,6 @@ def countHidden(fileName):
     scriptIn = open(fileName)
     script = scriptIn.read()
     scriptIn.close()
-    
     return script.count('#')
       
 def makeFile(header, code, footer, name, lines, linesOut, scoreOut, number, isOffspring, generation):
@@ -48,14 +51,12 @@ def makeCode(word1,word2,word3,word4,word5,code):
     return line
 
 def makeLines(word1,word2,word3,word4,word5,code,lines):
-    pos = 0
     script = []
-    while pos < lines:
+    for pos in range(lines):
         script.append(makeCode(word1,word2,word3,word4,word5,code))
-        pos += 1
     return script
 
-def breedScripts(file1,file2,start,end):
+def breedScripts(file1,file2,start,end,mateError,word1,word2,word3,word4,word5,code):
     scriptIn = open(file1)
     script1 = scriptIn.readlines()
     scriptIn.close()
@@ -64,13 +65,12 @@ def breedScripts(file1,file2,start,end):
     scriptIn.close()
     script1 = script1[start-1:-end]
     script2 = script2[start-1:-end]
-    limit =  len(script1)
-    pos = 0
-    while pos < limit:
-        if bool(random.randint(0,1)):
+    for pos in range(len(script1)):
+        if random.random()<mateError:
+            script1[pos] = makeCode(word1,word2,word3,word4,word5,code)
+        elif bool(random.randint(0,1)):
             script1[pos] = script2[pos]
         script1[pos] = script1[pos].replace('\n','')
-        pos += 1
     return script1
     
 def mutateBest(file1,start,end,pointMute,word1,word2,word3,word4,word5,code):
@@ -78,9 +78,7 @@ def mutateBest(file1,start,end,pointMute,word1,word2,word3,word4,word5,code):
     script1 = scriptIn.readlines()
     scriptIn.close()
     script1 = script1[start-1:-end]
-    pos = 0
-    limit =  len(script1)
-    while pos < limit:
+    for pos in range(len(script1)):
         choice = random.randint(1,3)
         if random.random()<pointMute:
             choice = random.randint(1,3)
@@ -93,7 +91,6 @@ def mutateBest(file1,start,end,pointMute,word1,word2,word3,word4,word5,code):
                 del script1[-1]
                 script1.insert(pos,makeCode(word1,word2,word3,word4,word5,code))
         script1[pos] = script1[pos].replace('\n','')
-        pos += 1
     return script1
 
 def main():
@@ -122,13 +119,17 @@ def main():
     scoreOut = 4
     increment = 2
     inputDelay = 10
+    mateError = 0.01
+    rescore = False
     noLoadScore = -99999999
+    punishCopies = 100
     scoreToWin = 10000
     gotHeader = False
     gotFooter = False
     gotCode = False
     countOff = False
     replaceWeak = True
+    toKeep = []
     
     code = []
     word1 = []
@@ -181,7 +182,11 @@ def main():
             elif line.startswith("Mutate best = "):
                 muteBest = int(line.replace('Mutate best = ','').replace('\n',''))
             elif line.startswith("Point mutations = "):
-                pointMute = float(line.replace('Point mutations = ','').replace('\n',''))    
+                pointMute = float(line.replace('Point mutations = ','').replace('\n',''))  
+            elif line.startswith("Mate error = "):
+                mateError = float(line.replace('Mate error = ','').replace('\n',''))
+            elif line.startswith("Rescore = "):
+                rescore = bool(line.replace('Rescore = ','').replace('\n','')) 
             elif line.startswith("Words1 = "):
                 word1.append(line.replace('Words1 = ','').replace('\n',''))
             elif line.startswith("Words2 = "):
@@ -214,7 +219,8 @@ def main():
                     else:
                         break
         pos += 1
-            
+    
+    diversity = errorMult = 1        
     fileScore = [0]*seeds
     done = False
 
@@ -230,24 +236,20 @@ def main():
     print "Header", header
     print "Footer", footer
         
-    pos = 0
     randList = []
-    while pos < seeds:
+    for pos in range(seeds):
         randList.append(pos)
-        pos += 1
    
-    pos =0
     if not carryOn or not os.path.exists(name):
         if not os.path.exists(name):
             os.makedirs(name)    
         generation = 0
-        while pos < seeds:
+        for pos in range(seeds):
             newCode = makeLines(word1,word2,word3,word4,word5,code,lines) 
             makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, pos,False, generation)
             logFile = open(logName(name,pos),'w')
             logFile.write('New seed generated at startup\n')
             logFile.close()
-            pos += 1
         mainLog = open(name + '/GenLog.txt','w')
         mainLog.write("Starting at generation 0, " + str(time.asctime( time.localtime(time.time()) )) + '\n')
         mainLog.close()
@@ -256,56 +258,69 @@ def main():
         temp = getGen.readlines()
         generation = int(temp[-1].split(' ')[1])+1
 	getGen.close()
+
             
     while not done:
-        
+                
         print "Generation:", generation
         
-        pos = 0
         canRun = seeds
-        while pos < seeds:
-            scoreFile = open(scoreName(name,pos),'w')
-            scoreFile.write(str(noLoadScore))
-            scoreFile.close()
-            try:
-                print "Running seed:", fileName(name,pos), "Generation:", generation
-  #              exec("python " + fileName(name,pos))
-                subprocess.Popen([sys.executable,fileName(name,pos)])
-            except:
-                print "Could not run seed", fileName(name,pos)
-            pos += 1
-        time.sleep(0.5)
-        pos = 0
-        while pos < seeds:
-            scoreFile = open(scoreName(name,pos))
-            line = scoreFile.read()
-            scoreFile.close()
-            multiplicator = 1
-            if '-' in line:
-                line = line.replace('-','')
-                multiplicator = -1   
-            try:
-                tempScore =  multiplicator*float(line)
-            except:
-                tempScore = noLoadScore
-            if tempScore == noLoadScore:
-                canRun -= 1
-            
-            if tempScore != noLoadScore and countOff:
-                tempScore += countHidden(fileName(name,pos))/(lines/5)
+        ran = 0
+        time.sleep(0.1)
+        for pos in range(seeds):
+            if pos not in toKeep or rescore:
+                scoreFile = open(scoreName(name,pos),'w')
+                scoreFile.write(str(noLoadScore))
+                scoreFile.close()
+                try:
+                    print "Running seed:", fileName(name,pos), "Generation:", generation
+                    subprocess.Popen([sys.executable,fileName(name,pos)])
+                    ran += 1
+                    if ran == 5:
+                        time.sleep(0.03)
+                        ran = 0
+                except:
+                    print "Could not run seed", fileName(name,pos)
+        time.sleep(0.1)
 
-            fileScore[pos] = tempScore
-            logFile = open(logName(name,pos),'a+b')
-            logFile.write('Generation: %s Score: %s\n' % (str(generation), str(tempScore)))
-            logFile.close()
-            pos += 1
+        for pos in range(seeds):
+            if pos not in toKeep or rescore:
+                scoreFile = open(scoreName(name,pos))
+                line = scoreFile.read()
+                scoreFile.close()
+                multiplicator = 1
+                if '-' in line:
+                    line = line.replace('-','')
+                    multiplicator = -1   
+                try:
+                    tempScore =  multiplicator*float(line)
+                except:
+                    tempScore = noLoadScore
+                if tempScore == noLoadScore:
+                    canRun -= 1
+                
+                if tempScore != noLoadScore and countOff:
+                    tempScore += countHidden(fileName(name,pos))/(lines/5)
+    
+                fileScore[pos] = tempScore
+                logFile = open(logName(name,pos),'a+b')
+                logFile.write('Generation: %s Score: %s\n' % (str(generation), str(tempScore)))
+                logFile.close()
+                
+        diversity = float(len(set(fileScore)))/seeds 
+        errorMult = adjustError(diversity)
+        
+        """if punishCopies != 0:
+            for pos in range(seeds-1):
+                fileScore[pos] -= fileScore[pos+1:].count(fileScore[pos])*punishCopies"""
+
         meanScore = sum(fileScore)/seeds
         rankScore = sorted(fileScore)[:]
-        pos = 0
+
         rankInts = []
-        while pos < seeds:
+        for pos in range(seeds):
             rankInts.append('%.2f' % rankScore[pos])
-            pos += 1
+
         medianScore =  rankScore[len(rankScore)/2]
         replaceCutOff = rankScore[new-1]
         killCutOff = rankScore[new+kill-1]
@@ -323,10 +338,9 @@ def main():
             extraKills = extra*(kill/gottaGo)
             extraMutes = extra*(muteBest/gottaGo)
                           
-        pos = 0
         ID = randList.index(fileScore.index(min(fileScore)))
         random.shuffle(randList)
-        while pos < seeds:
+        for pos in range(seeds):
             value = fileScore[randList[pos]]
             randPos = randList[pos]
             if fileScore[randPos] > fileScore[randList[ID]] and fileScore[randPos] != noLoadScore:
@@ -339,7 +353,7 @@ def main():
                 toMute.append(randPos)
             else:
                 toKeep.append(randPos) 
-            pos += 1
+
         
         bestScore =  fileScore[randList[ID]]
         
@@ -350,51 +364,55 @@ def main():
         mainLog.write("Gen: %s Best: %s Seed: %s Running: %s Time: %s\n" % (str(generation), '%.2f' % bestScore, ID, str(canRun), time.asctime( time.localtime(time.time()) )))
         mainLog.close()
         
-        pos = 0
-        limit = len(toKill)
-        while pos < limit:
-           print "Replacing ID with random breed: ", toKill[pos]
+        delay = 0.01
+        delayEvery = 5
+        delayCount = 0
+        
+        for killOne in toKill:
+           print "Replacing ID with random breed: ", killOne
            index1 = fileName(name,str(random.choice(toKeep)))
            index2 = fileName(name,str(random.choice(toKeep)))
            while index1 == index2:
                index2 = fileName(name,str(random.choice(toKeep)))          
-           newCode = breedScripts(index1,index2,headLen,footLen)
-           scoreFile = open(scoreName(name,toKill[pos]),'w')
+           newCode = breedScripts(index1,index2,headLen,footLen,mateError*errorMult,word1,word2,word3,word4,word5,code)
+           scoreFile = open(scoreName(name,killOne),'w')
            scoreFile.write(str(noLoadScore))
            scoreFile.close()
-           makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, toKill[pos],True, generation)
-           logFile = open(logName(name,toKill[pos]),'w')
+           makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, killOne,True, generation)
+           logFile = open(logName(name,killOne),'w')
            logFile.write('New script bred on generation %s from scripts %s and %s\n' % (str(generation),index1,index2))
            logFile.close()
-           pos += 1
+           delayCount += 1
+           if delayCount % delayEvery == 0:
+               time.sleep(delay)
            
-        pos = 0
-        limit = len(toMute)
-        while pos < limit:
-           print "Replacing ID with strong mutant: ", toMute[pos]
-           newCode = mutateBest(fileName(name,ID),headLen,footLen,pointMute,word1,word2,word3,word4,word5,code)
-           scoreFile = open(scoreName(name,toMute[pos]),'w')
+        for muteOne in toMute:
+           print "Replacing ID with strong mutant: ", muteOne
+           newCode = mutateBest(fileName(name,ID),headLen,footLen,pointMute*errorMult,word1,word2,word3,word4,word5,code)
+           scoreFile = open(scoreName(name,muteOne),'w')
            scoreFile.write(str(noLoadScore))
            scoreFile.close()
-           makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, toMute[pos],True, generation)
-           logFile = open(logName(name,toMute[pos]),'w')
+           makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, muteOne, True, generation)
+           logFile = open(logName(name,muteOne),'w')
            logFile.write('New script mutated on generation %s from scripts %s\n' % (str(generation),ID))
            logFile.close()
-           pos += 1
+           delayCount += 1
+           if delayCount % delayEvery == 0:
+               time.sleep(delay)
         
-        pos = 0
-        limit = len(toReplace)
-        while pos < limit:
-            print "Replacing ID with novel seed: ", toReplace[pos]
+        for replaceOne in toReplace:
+            print "Replacing ID with novel seed: ", replaceOne
             newCode = makeLines(word1,word2,word3,word4,word5,code,lines)
-            makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, toReplace[pos], False, generation)
-            scoreFile = open(scoreName(name,toReplace[pos]),'w')
+            makeFile(header, newCode, footer, name, lines, linesOut, scoreOut, replaceOne, False, generation)
+            scoreFile = open(scoreName(name,replaceOne),'w')
             scoreFile.write(str(noLoadScore))
             scoreFile.close()
-            logFile = open(logName(name,toReplace[pos]),'w')
+            logFile = open(logName(name,replaceOne),'w')
             logFile.write('New script spawned on generation %s' % str(generation))
             logFile.close()
-            pos += 1
+            delayCount += 1
+            if delayCount % delayEvery == 0:
+               time.sleep(delay)
             
         if bestScore == scoreToWin:
             print "Optimal result recieved at generation %s, please check script %s to verify!" % (str(generation),fileName(name,ID))
@@ -408,8 +426,9 @@ def main():
         if generation > 0 and generation%increment == 0:
             print rankInts
             print "Interval Reached, please enter 'quit' in next", inputDelay, "seconds to quit"
-            print "Kept: %s Bred: %s Novel: %s Mutated: %s" % (str(len(toKeep)),str(len(toKill)),str(len(toReplace)),str(len(toMute)))
-            print "Maximum score: %s Mean: %s Median: %s" % (bestScore,meanScore,medianScore)                    
+            print "Kept: %s Bred: %s Novel: %s Mutated: %s" % (len(toKeep),len(toKill),len(toReplace),len(toMute))
+            print "Maximum score: %s Mean: %s Median: %s" % (bestScore,meanScore,medianScore)   
+            print "Diversity: %s%% Error Adjustment: %s" % (100*diversity,errorMult)
             i, o, e = select.select([sys.stdin], [], [], inputDelay)
             if (i):
                 if sys.stdin.readline().strip().lower() == 'quit':

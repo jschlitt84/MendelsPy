@@ -1,16 +1,17 @@
 Name = ScarecrowsBrain
 Score to win = 10000
 Reward comments = False
-Number of seeds = 300
+Number of seeds = 400
 Lines per seed = 25
-Runs per query = 10
+Runs per query = 30
 Query delay = 10
-Kill = 150
-New = 15
+Kill = 40
+New = 10
 Mutate best = 5
 Point mutations = 0.25
 Lines per out = 10
 Score per out = 1
+Rescore = True
 
 Header start
 from random import uniform
@@ -43,6 +44,8 @@ if ans1 < 0:
 score += 10000 - 10*difference1
 outFile.write(str(score))
 outFile.close()
+
+
 Footer end
 
 Words1 = ans1

@@ -1,13 +1,14 @@
 Name = DeathOfAProblemSet
-Number of seeds = 500
+Number of seeds = 400
 Lines per seed = 40
 Score to win = 10000
-Runs per query = 10
+Runs per query = 30
 Query delay = 10
-Kill = 100
-Mutate best = 200
+Kill = 40
+Mutate best = 0
+Mate error = 0.10
 Point mutations = 0.20
-New = 180
+New = 7
 Lines per out = 10
 Score per out = 1
 
@@ -25,13 +26,13 @@ Header end
 Footer start
 
 order =  list(OrderedDict.fromkeys(order))
-if -1 in order:
+
+while -1 in order:
 	del order[order.index(-1)]
 
 for stop in stops:
 	if stop not in order:
 		score -= 5000
-
 
 distance =  0
 for pos in range(len(order)-1):
@@ -45,6 +46,7 @@ if order[-1] != len(order) -1:
 
 outFile.write(str(score))
 outFile.close()
+
 Footer end
 
 Words1 = 0
